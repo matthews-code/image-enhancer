@@ -15,12 +15,25 @@ def enhanceImage(image, eBrightness, eSharpness, eContrast):
     currContrast        = ImageEnhance.Contrast(imageSharpness)
     finalImage          = currContrast.enhance(eContrast)
 
-    finalImage.show()
+    # finalImage.show()
+    finalImage.save('enhanced/gfg-enhanced.png')
 
 if __name__ == "__main__":
+    # Start program
     print('Running Image Enhancer!')
+    
+    # Take inputs
+    folderImages    = input('Folder name of input images: ')
+    folderEnhanced  = input('Folder name of output images: ')
 
-    # Load/Open image file
-    image = Image.open('images\gfg.png')
+    # Example inputs: 2.5, 8.3, 0.3
+    bF = float(input('Brightness Factor: '))
+    sF = float(input('Sharpess Factor: '))
+    cF = float(input('Contrast Factor: '))
 
-    enhanceImage(image, 2.5, 8.3, 0.3)
+    # Load/Save image file
+    image = Image.open('images/gfg.png')
+    enhanceImage(image, bF, sF, cF)
+
+    # When finished running all processes
+    print('Done!')
