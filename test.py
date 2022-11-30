@@ -6,58 +6,62 @@ from PIL import ImageEnhance
 shared_image_buffer = []
 
 # Load images onto array with semaphore and enhancement indicator
-
 path = './images'
 files = os.listdir(path)
 
 for image in files:
     img = Image.open(path + '/' + image)
-    shared_image_buffer.append([img, threading.Lock(), 0, 0, 0])
-        
+    shared_image_buffer.append([img, threading.Lock()])
+
+
 def enhanceBrightness(bF):
     global shared_image_buffer
 
-    for i in range (len(shared_image_buffer)):
+    for i in range(len(shared_image_buffer)):
         shared_image_buffer[i][1].acquire()
 
-        if shared_image_buffer[i][2] == 0:
-            image                       = shared_image_buffer[i][0]
-            
-            finalImage                  = ImageEnhance.Brightness(image).enhance(bF)
-            shared_image_buffer[i][0]   = finalImage
+        image = shared_image_buffer[i][0]
 
-            finalImage.show()
-            shared_image_buffer[i][2]   = 1
-            shared_image_buffer[i][1].release()
+        finalImage = ImageEnhance.Brightness(image).enhance(bF)
+        shared_image_buffer[i][0] = finalImage
 
-        else:
-            shared_image_buffer[i][1].release()
+        shared_image_buffer[i][1].release()
 
-# def enhanceSharpness(sF):
-#     global shared_image_buffer
+def enhanceSharpness(sF):
+    global shared_image_buffer
 
-#     for i in range (len(shared_image_buffer)):
-#         shared_image_buffer[i][1].acquire()
+    for i in range(len(shared_image_buffer)):
+        shared_image_buffer[i][1].acquire()
 
-#         if shared_image_buffer[i][3] == 0:
-#             image                       = shared_image_buffer[i][0]
-            
-#             finalImage                  = ImageEnhance.Sharpness(image).enhance(sF)
-#             shared_image_buffer[i][0]   = finalImage
+        image = shared_image_buffer[i][0]
 
-#             finalImage.show()
-#             shared_image_buffer[i][3]   = 1
-#             shared_image_buffer[i][1].release()
+        finalImage = ImageEnhance.Sharpness(image).enhance(sF)
+        shared_image_buffer[i][0] = finalImage
 
-#         else:
-#             shared_image_buffer[i][1].release()
+        shared_image_buffer[i][1].release()
+
+def enhanceContrast(sF):
+    global shared_image_buffer
+
+    for i in range(len(shared_image_buffer)):
+        shared_image_buffer[i][1].acquire()
+
+        image = shared_image_buffer[i][0]
+
+        finalImage = ImageEnhance.Contrast(image).enhance(sF)
+        shared_image_buffer[i][0] = finalImage
+
+        shared_image_buffer[i][1].release()
 
 if __name__ == "__main__":
     bT = threading.Thread(target=enhanceBrightness, args=(1.2,))
-    # sT = threading.Thread(target=enhanceSharpness, args=(2.4,))
-    
+    sT = threading.Thread(target=enhanceSharpness, args=(5,))
+    cT = threading.Thread(target=enhanceContrast, args=(3,))
+
     bT.start()
-    # sT.start()
+    sT.start()
+    cT.start()
 
     bT.join()
-    # sT.join()
+    sT.join()
+    cT.join()
