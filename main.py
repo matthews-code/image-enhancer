@@ -25,15 +25,17 @@ class producer (threading.Thread):
             print('Producer appended an image.')
 
 class consumer (threading.Thread):
-    def __init__(self, images, bF, cF, sF, threadId):
+    def __init__(self, images, brightness, contrast, sharpness, threadId):
         threading.Thread.__init__(self)
-        self.counter = len(images)
-        self.brightness = bF
-        self.contrast = cF
-        self.sharpness = sF
+            
+        self.brightness = brightness
+        self.contrast = contrast
+        self.sharpness = sharpness
         self.id = threadId
-        self.list = []
-        self.item = 0
+
+        self.counter = int(len(images)/2)
+        if len(images) % 2 == 1 and threadId == 0:
+            self.counter = int(len(images)/2 + 1)
 
     def run(self):
         global sharedResourceBuffer
@@ -43,25 +45,16 @@ class consumer (threading.Thread):
             semaphoreBuffer.acquire() 
             if sharedResourceBuffer:
                 origImg = sharedResourceBuffer.pop()
-                self.item = self.applyEffects(origImg)
-
-                self.item.save('enhanced/' + str(i) + '.png')
-
-                self.list.append(self.item)
-                print("Consumer %i popped an image"%(self.id))
-
-        print('The values acquired by consumer ' + str(self.id) + ' are ' + str(self.list) + '\r\n')
+                finalImage = self.applyEffects(origImg[0])
+                finalImage.save('enhanced/' + origImg[1])
 
     def applyEffects(self, image):    
-        currBrightness      = ImageEnhance.Brightness(image)
-        currImage     = currBrightness.enhance(self.brightness)
-
-        currContrast        = ImageEnhance.Contrast(currImage)
-        currImage          = currContrast.enhance(self.contrast)
-        
-        currSharpness       = ImageEnhance.Sharpness(currImage)
-        finalImage      = currSharpness.enhance(self.sharpness)
-
+        currBrightness = ImageEnhance.Brightness(image)
+        currImage = currBrightness.enhance(self.brightness)
+        currContrast = ImageEnhance.Contrast(currImage)
+        currImage = currContrast.enhance(self.contrast)
+        currSharpness = ImageEnhance.Sharpness(currImage)
+        finalImage = currSharpness.enhance(self.sharpness)
         return finalImage
 
 if __name__ == "__main__":
@@ -69,10 +62,9 @@ if __name__ == "__main__":
     print('Running Image Enhancer!')
     
     # Take inputs
-# folderImages    = input('Folder name of input images: ')
-# folderEnhanced  = input('Folder name of output images: ')
+    # folderImages    = input('Folder name of input images: ')
+    # folderEnhanced  = input('Folder name of output images: ')
 
-    # Example inputs: 2.5, 8.3, 0.3
     bF = float(input('Brightness Factor: '))
     sF = float(input('Sharpess Factor: '))
     cF = float(input('Contrast Factor: '))
@@ -81,21 +73,24 @@ if __name__ == "__main__":
     path = './images'
     files = os.listdir(path)
 
-    for image in files:
-        img = Image.open(path + '/' + image)
-        sharedImages.append(img)
+    for imageName in files:
+        img = Image.open(path + '/' + imageName)
+        sharedImages.append([img, imageName])
 
     # Create threads
     producerThread = producer(sharedImages)
     consumerThread = consumer(sharedImages, bF, cF, sF, 1)
+    consumerThread2 = consumer(sharedImages, bF, cF, sF, 2)
 
     startTime = time.time()
 
     producerThread.start()
     consumerThread.start()
+    consumerThread2.start()
 
     producerThread.join()
     consumerThread.join()
+    consumerThread2.join()
 
     # When finished running all processes
     print("--- %s seconds ---" % (time.time() - startTime))
