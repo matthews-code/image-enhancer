@@ -52,15 +52,17 @@ def enhanceContrast(sF):
 
 
 if __name__ == "__main__":
-    inputFolder     = input('Input folder name  [Leave blank to use `images`]: ')
-    outputFolder    = input('Output folder name [Leave blank to use `enhanced`]: ')
+    inputFolder = input('\nInput folder name  [Leave blank to use `images`]: ')
+    outputFolder = input(
+        'Output folder name [Leave blank to use `enhanced`]: ')
 
     # Load images onto array with semaphore and enhancement indicator
-    if(inputFolder == ''):
+    if (inputFolder == ''):
+        inputFolder = 'images'
         path = './images'
     else:
-         path = './' + inputFolder
-    
+        path = './' + inputFolder
+
     files = os.listdir(path)
 
     for image in files:
@@ -85,4 +87,19 @@ if __name__ == "__main__":
     sT.join()
     cT.join()
 
-    print("%s Seconds" % (time.time() - startTime))
+    seconds = (time.time() - startTime)
+    seconds %= 3600
+    minutes = seconds // 60
+    seconds %= 60
+
+    lines = [
+                'Program Stats', 
+                "Compile Time: %d Minutes & %f Seconds" % (minutes, seconds),
+                "Number of Images: %d" % len(shared_image_buffer),
+                "Output Folder: %s" % inputFolder
+            ]
+            
+    with open('stats.txt', 'w') as f:
+        f.write('\n'.join(lines))
+
+    print("\nSuccess! See details in stats.txt.\n")
