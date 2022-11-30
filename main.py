@@ -1,6 +1,12 @@
+import threading
+import time
+
 # Program requires Pillow, run `pip install Pillow` before running program
 from PIL import Image
 from PIL import ImageEnhance
+
+sharedResourceBuffer = []
+semaphoreBuffer = threading.Semaphore(0)
 
 def enhanceImage(image, eBrightness, eSharpness, eContrast):    
     # Enhance brightness
@@ -17,6 +23,8 @@ def enhanceImage(image, eBrightness, eSharpness, eContrast):
 
     # finalImage.show()
     finalImage.save('enhanced/gfg-enhanced.png')
+
+
 
 if __name__ == "__main__":
     # Start program
