@@ -1,6 +1,19 @@
 # Program requires Pillow, run `pip install Pillow` before running program
+import threading
+import glob
 from PIL import Image
 from PIL import ImageEnhance
+
+shared_image_buffer = []
+
+# Load images onto array with semaphore and enhancement indicator
+images = glob.glob('images/*.jpg')
+for image in images:
+    with open(image, 'rb') as file:
+        img = Image.open(file)
+        shared_image_buffer.append([img, threading.Semaphore(1), 0, 0, 0])
+
+print(shared_image_buffer)
 
 def enhanceImage(image, eBrightness, eSharpness, eContrast):    
     # Enhance brightness
