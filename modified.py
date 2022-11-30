@@ -12,16 +12,16 @@ def enhanceBrightness(bF):
     currImage = 0 # Index of image about to be processed
 
     while(imagesDone != len(shared_image_buffer)):
-        if shared_image_buffer[currImage][1].locked():
-            currImage += 1
-            currImage %= len(shared_image_buffer)
-        else:
+        if not shared_image_buffer[currImage][1].locked():
             shared_image_buffer[currImage][1].acquire()
             image = shared_image_buffer[currImage][0]
             finalImage = ImageEnhance.Brightness(image).enhance(bF)
             shared_image_buffer[currImage][0] = finalImage
             imagesDone += 1
             shared_image_buffer[currImage][1].release()
+        else:
+            currImage += 1
+            currImage %= len(shared_image_buffer)
 
 def enhanceSharpness(sF):
     global shared_image_buffer
@@ -29,16 +29,16 @@ def enhanceSharpness(sF):
     currImage = 0 # Index of image about to be processed
 
     while(imagesDone != len(shared_image_buffer)):
-        if shared_image_buffer[currImage][1].locked():
-            currImage += 1
-            currImage %= len(shared_image_buffer)
-        else:
+        if not shared_image_buffer[currImage][1].locked():
             shared_image_buffer[currImage][1].acquire()
             image = shared_image_buffer[currImage][0]
             finalImage = ImageEnhance.Sharpness(image).enhance(sF)
             shared_image_buffer[currImage][0] = finalImage
             imagesDone += 1
             shared_image_buffer[currImage][1].release()
+        else:
+            currImage += 1
+            currImage %= len(shared_image_buffer)
 
 def enhanceContrast(sF):
     global shared_image_buffer
@@ -46,25 +46,26 @@ def enhanceContrast(sF):
     currImage = 0 # Index of image about to be processed
 
     while(imagesDone != len(shared_image_buffer)):
-        if shared_image_buffer[currImage][1].locked():
-            currImage += 1
-            currImage %= len(shared_image_buffer)
-        else:
+        if not shared_image_buffer[currImage][1].locked():
             shared_image_buffer[currImage][1].acquire()
             image = shared_image_buffer[currImage][0]
             finalImage = ImageEnhance.Contrast(image).enhance(cF)
             shared_image_buffer[currImage][0] = finalImage
             imagesDone += 1
             shared_image_buffer[currImage][1].release()
+        else:
+            currImage += 1
+            currImage %= len(shared_image_buffer)
 
 if __name__ == "__main__":
 
     # Load images onto array with semaphore and enhancement indicator
-    path = 'many-images'
+    path = 'few'
     endPath = 'enhanced/'
 
-    path = input('Folder location of images: ')
-    endPath = input('Folder location of enhanced images: ')
+    # path = input('Folder location of images: ')
+    # endPath = input('Folder location of enhanced images: ')
+
     files = os.listdir(path)
 
     for image in files:
@@ -88,6 +89,12 @@ if __name__ == "__main__":
     bT.join()
     sT.join()
     cT.join()
+
+    i = 0
+
+    for img in shared_image_buffer:
+        img[0].save('enhanced/' + str(i) + '.png')
+        i += 1
 
     print("--- %s seconds ---" % (time.time() - startTime))
 
