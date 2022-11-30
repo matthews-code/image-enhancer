@@ -1,5 +1,5 @@
 Program Stats
 | ==================================== |
-Compile Time: 0 Minutes & 0.250902 Seconds
-Number of Images: 4
+Compile Time: 0 Minutes & 3.394941 Seconds
+Number of Images: 6
 Output Folder: images
