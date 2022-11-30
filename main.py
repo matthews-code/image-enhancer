@@ -94,6 +94,7 @@ if __name__ == "__main__":
 
     lines = [
                 'Program Stats', 
+                '| ==================================== |', 
                 "Compile Time: %d Minutes & %f Seconds" % (minutes, seconds),
                 "Number of Images: %d" % len(shared_image_buffer),
                 "Output Folder: %s" % inputFolder
