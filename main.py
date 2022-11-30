@@ -8,12 +8,12 @@ import time
 shared_image_buffer = []
 
 # Load images onto array with semaphore and enhancement indicator
-path = './images'
+path = './many-images'
 files = os.listdir(path)
 
 for image in files:
     img = Image.open(path + '/' + image)
-    shared_image_buffer.append([img, threading.Lock(), 0, 0, 0])
+    shared_image_buffer.append([img, threading.Lock()])
 
 def enhanceBrightness(bF):
     global shared_image_buffer
