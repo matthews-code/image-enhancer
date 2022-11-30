@@ -1,52 +1,77 @@
-# Program requires Pillow, run `pip install Pillow` before running program
 import threading
-import glob
+import os
 from PIL import Image
 from PIL import ImageEnhance
+
+import time
 
 shared_image_buffer = []
 
 # Load images onto array with semaphore and enhancement indicator
-images = glob.glob('images/*.jpg')
-for image in images:
-    with open(image, 'rb') as file:
-        img = Image.open(file)
-        shared_image_buffer.append([img, threading.Semaphore(1), 0, 0, 0])
+path = './images'
+files = os.listdir(path)
 
-print(shared_image_buffer)
+for image in files:
+    img = Image.open(path + '/' + image)
+    shared_image_buffer.append([img, threading.Lock(), 0, 0, 0])
 
-def enhanceImage(image, eBrightness, eSharpness, eContrast):    
-    # Enhance brightness
-    currBrightness      = ImageEnhance.Brightness(image)
-    imageBrightness     = currBrightness.enhance(eBrightness)
+def enhanceBrightness(bF):
+    global shared_image_buffer
 
-    # Enhance sharpness
-    currSharpness       = ImageEnhance.Sharpness(imageBrightness)
-    imageSharpness      = currSharpness.enhance(eSharpness)
+    for i in range(len(shared_image_buffer)):
+        shared_image_buffer[i][1].acquire()
 
-    # Enhance contrast
-    currContrast        = ImageEnhance.Contrast(imageSharpness)
-    finalImage          = currContrast.enhance(eContrast)
+        image = shared_image_buffer[i][0]
 
-    # finalImage.show()
-    finalImage.save('enhanced/gfg-enhanced.png')
+        finalImage = ImageEnhance.Brightness(image).enhance(bF)
+        shared_image_buffer[i][0] = finalImage
+
+        shared_image_buffer[i][1].release()
+
+def enhanceSharpness(sF):
+    global shared_image_buffer
+
+    for i in range(len(shared_image_buffer)):
+        shared_image_buffer[i][1].acquire()
+
+        image = shared_image_buffer[i][0]
+
+        finalImage = ImageEnhance.Sharpness(image).enhance(sF)
+        shared_image_buffer[i][0] = finalImage
+
+        shared_image_buffer[i][1].release()
+
+def enhanceContrast(sF):
+    global shared_image_buffer
+
+    for i in range(len(shared_image_buffer)):
+        shared_image_buffer[i][1].acquire()
+
+        image = shared_image_buffer[i][0]
+
+        finalImage = ImageEnhance.Contrast(image).enhance(sF)
+        shared_image_buffer[i][0] = finalImage
+
+        finalImage.save('enhanced/' + str(i) + '.png')
+        shared_image_buffer[i][1].release()
 
 if __name__ == "__main__":
-    # Start program
-    print('Running Image Enhancer!')
-    
-    # Take inputs
-    folderImages    = input('Folder name of input images: ')
-    folderEnhanced  = input('Folder name of output images: ')
-
-    # Example inputs: 2.5, 8.3, 0.3
     bF = float(input('Brightness Factor: '))
     sF = float(input('Sharpess Factor: '))
     cF = float(input('Contrast Factor: '))
 
-    # Load/Save image file
-    image = Image.open('images/gfg.png')
-    enhanceImage(image, bF, sF, cF)
+    bT = threading.Thread(target=enhanceBrightness, args=(bF,))
+    sT = threading.Thread(target=enhanceSharpness, args=(sF,))
+    cT = threading.Thread(target=enhanceContrast, args=(cF,))
+    
+    startTime = time.time()
 
-    # When finished running all processes
-    print('Done!')
+    bT.start()
+    sT.start()
+    cT.start()
+
+    bT.join()
+    sT.join()
+    cT.join()
+
+    print("--- %s seconds ---" % (time.time() - startTime))
