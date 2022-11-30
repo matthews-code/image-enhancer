@@ -6,10 +6,6 @@ import time
 from PIL import Image
 from PIL import ImageEnhance
 
-sharedImages = []
-sharedResourceBuffer = []
-semaphoreBuffer = threading.Semaphore(0)
-
 class producer (threading.Thread):
     def __init__(self, images):
         threading.Thread.__init__(self)
@@ -33,9 +29,9 @@ class consumer (threading.Thread):
         self.sharpness = sharpness
         self.id = threadId
 
-        self.counter = int(len(images)/2)
+        self.counter = int(len(images)/numConsumerThreads)
         if len(images) % 2 == 1 and threadId == 0:
-            self.counter = int(len(images)/2 + 1)
+            self.counter = int(len(images)/numConsumerThreads + 1)
 
     def run(self):
         global sharedResourceBuffer
@@ -46,7 +42,7 @@ class consumer (threading.Thread):
             if sharedResourceBuffer:
                 origImg = sharedResourceBuffer.pop()
                 finalImage = self.applyEffects(origImg[0])
-                finalImage.save('enhanced/' + origImg[1])
+                finalImage.save(destinationPath + origImg[1])
 
     def applyEffects(self, image):    
         currBrightness = ImageEnhance.Brightness(image)
@@ -57,40 +53,50 @@ class consumer (threading.Thread):
         finalImage = currSharpness.enhance(self.sharpness)
         return finalImage
 
+sharedImages = []
+sharedResourceBuffer = []
+semaphoreBuffer = threading.Semaphore(0)
+consumerThreadList = []
+
+numConsumerThreads = 2
+
+sourcePath = './images'
+destinationPath = './enhanced/'
+
 if __name__ == "__main__":
     # Start program
     print('Running Image Enhancer!')
     
     # Take inputs
-    # folderImages    = input('Folder name of input images: ')
-    # folderEnhanced  = input('Folder name of output images: ')
+    sourcePath    = input('Folder name of input images (Leave blank for `images`): ')
+    destinationPath  = input('Folder name of output images (Leave blank for `enhanced`): ')
+
+    # Load images
+    files = os.listdir(sourcePath)
+
+    for imageName in files:
+        img = Image.open(sourcePath + '/' + imageName)
+        sharedImages.append([img, imageName])
 
     bF = float(input('Brightness Factor: '))
     sF = float(input('Sharpess Factor: '))
     cF = float(input('Contrast Factor: '))
 
-    # Load images
-    path = './images'
-    files = os.listdir(path)
-
-    for imageName in files:
-        img = Image.open(path + '/' + imageName)
-        sharedImages.append([img, imageName])
-
-    # Create threads
-    producerThread = producer(sharedImages)
-    consumerThread = consumer(sharedImages, bF, cF, sF, 1)
-    consumerThread2 = consumer(sharedImages, bF, cF, sF, 2)
-
+    # Create and run threads
     startTime = time.time()
 
+    producerThread = producer(sharedImages)
     producerThread.start()
-    consumerThread.start()
-    consumerThread2.start()
+
+    for i in range(numConsumerThreads):
+        consumerThread = consumer(sharedImages, bF, cF, sF, i)
+        consumerThreadList.append(consumerThread)
+        consumerThread.start()
 
     producerThread.join()
-    consumerThread.join()
-    consumerThread2.join()
+
+    for consThread in consumerThreadList:
+        consThread.join()
 
     # When finished running all processes
     print("--- %s seconds ---" % (time.time() - startTime))
