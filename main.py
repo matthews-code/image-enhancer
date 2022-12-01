@@ -6,6 +6,9 @@ import time
 from PIL import Image
 from PIL import ImageEnhance
 
+global endEvent
+endEvent = threading.Event()
+
 class producer (threading.Thread):
     def __init__(self, images, threadId):
         threading.Thread.__init__(self)
@@ -45,6 +48,10 @@ class consumer (threading.Thread):
 
         for i in range(self.counter):
             semaphoreBuffer.acquire()
+
+            if endEvent.is_set():
+                break
+
             if sharedResourceBuffer:
                 origImg = sharedResourceBuffer.pop()
                 finalImage = self.applyEffects(origImg[0])
@@ -78,9 +85,12 @@ enhanceTime = 0
 
 if __name__ == "__main__":
     # ------- Start program -------
+
     print('\nRunning Image Enhancer!\n')
     print('||===========================||\n')
+    
     # ------- Take path inputs -------
+
     sourcePath = input(
         'Folder name of input images    [Leave blank for `images`]: ')
     destinationPath = input(
@@ -128,6 +138,7 @@ if __name__ == "__main__":
         sF = 1
 
     # ------- Take number of thread input -------
+    
     numConsumerThreads = input(
         'Number of consumer threads     [Leave blank for 1 consumer]: ')
 
@@ -157,9 +168,10 @@ if __name__ == "__main__":
         consumerThread = consumer(sharedImages, bF, cF, sF, i)
         consumerThreadList.append(consumerThread)
         consumerThread.start()
-
-    time.sleep(1.5)
+    
     # Kill thread here
+    #time.sleep(10)
+    #endEvent.set()
 
     for consThread in consumerThreadList:
         consThread.join()    
