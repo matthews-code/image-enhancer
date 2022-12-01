@@ -1,0 +1,5 @@
+Program Stats
+| ==================================== |
+Compile Time: 0 Minutes & 2.887626 Seconds
+Number of Images: 8
+Output Folder: ./enhanced/
