@@ -29,8 +29,9 @@ class producer (multiprocessing.Process):
             self.queue.put(self.images[i])
 
 class consumer (multiprocessing.Process):
-    def __init__(self, images, brightness, contrast, sharpness, procId, queue):
+    def __init__(self, images, brightness, contrast, sharpness, procId, queue, destinationPath):
         multiprocessing.Process.__init__(self)
+        self.destPath = destinationPath
         self.brightness = brightness
         self.contrast = contrast
         self.sharpness = sharpness
@@ -49,7 +50,7 @@ class consumer (multiprocessing.Process):
         for i in range(self.counter):
             origImg = self.queue.get()
             finalImage = self.applyEffects(origImg[0])
-            finalImage.save(destinationPath + origImg[1])
+            finalImage.save(self.destPath + origImg[1])
 
     def applyEffects(self, image):    
         currBrightness = ImageEnhance.Brightness(image)
@@ -71,11 +72,10 @@ consumerProcList = []
 numProducerProcs = 1
 numConsumerProcs = 0
 
-destinationPath = ''
-
 enhanceTime = 0
 
 if __name__ == "__main__":
+    destinationPath = ''
     queue = multiprocessing.Queue()
 
     # ------- Start program -------
@@ -95,8 +95,9 @@ if __name__ == "__main__":
 
     # ------- Take enhancing time input -------
     enhanceTime = input('Enhance time in minutes [Leave blank for 0.1 minute]: ')
-
-    if enhanceTime: enhanceTime = float(enhanceTime) * 60
+    
+    # enhanceTime = float(enhanceTime)
+    if enhanceTime: enhanceTime = float(enhanceTime)
     else: enhanceTime = 0.1 * 60
     print('Enhance time in seconds: %f'%(enhanceTime))
 
@@ -136,17 +137,20 @@ if __name__ == "__main__":
         producerProc.start()
 
     for i in range(numConsumerProcs):
-        consumerProc = consumer(sharedImages, bF, cF, sF, i, queue)
+        consumerProc = consumer(sharedImages, bF, cF, sF, i, queue, destinationPath)
         consumerProcList.append(consumerProc)
         consumerProc.start()
 
     # time.sleep(enhanceTime)
 
     for prodProc in producerProcList:
-        prodProc.terminate()
+        # prodProc.terminate()
+        prodProc.join()
 
     for consProc in consumerProcList:
-        consProc.terminate()
+        # consProc.terminate()
+        prodProc.join()
 
+    endTime = time.time()
     # When finished running all processes
-    print("\n--- %s seconds with %i producer/s and %i consumer/s ---" % (time.time() - startTime, numProducerProcs, numConsumerProcs))
+    print("\n--- %s seconds with %i producer/s and %i consumer/s ---" % (endTime - startTime, numProducerProcs, numConsumerProcs))
