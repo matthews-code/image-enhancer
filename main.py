@@ -1,4 +1,4 @@
-import os
+import os, shutil
 import threading
 import time
 
@@ -66,8 +66,44 @@ class consumer (threading.Thread):
         finalImage = currSharpness.enhance(self.sharpness)
         return finalImage
 
-# ------- Global variables -------
+def ending():
+    for consThread in consumerThreadList:
+        consThread.join()    
 
+    for prodThread in producerThreadList:
+        prodThread.join()
+
+    for consThread in consumerThreadList:
+        consThread.join()
+
+    # When finished running all processes
+    seconds = (time.time() - startTime)
+    seconds %= 3600
+    minutes = seconds // 60
+    seconds %= 60
+
+    files = os.listdir(destinationPath)
+
+    lines = [
+        'Program Stats',
+        '| ==================================== |',
+        "Compile Time: %d Minutes & %f Seconds" % (minutes, seconds),
+        "Successfully Enhanced [%d / %d] images" % (len(files), len(sharedImages)),
+        "Output Folder: %s" % destinationPath
+    ]
+
+    with open('stats.txt', 'w') as f:
+        f.write('\n'.join(lines))
+
+    print("\nCompile Time: %d Minutes & %f Seconds" % (minutes, seconds))
+    print("Success! See details in stats.txt.\n")
+
+def endKaagad():
+    endEvent.set()
+    ending()
+    quit()
+
+# ------- Global variables -------
 
 sharedImages = []
 sharedResourceBuffer = []
@@ -108,9 +144,12 @@ if __name__ == "__main__":
 
     destinationPath = './' + destinationPath + '/'
 
+    # --- Clear enhanced folder ----
+    shutil.rmtree(destinationPath)
+
     # ------- Take enhancing time input -------
     enhanceTime = input(
-        'Enhance time in minutes        [Leave blank for 0.1 minute]: ')
+        'Enhance time in minutes        [Leave blank for 0.1 minute (6 Seconds)]: ')
 
     if enhanceTime:
         enhanceTime = float(enhanceTime) * 60
@@ -138,7 +177,7 @@ if __name__ == "__main__":
         sF = 1
 
     # ------- Take number of thread input -------
-    
+
     numConsumerThreads = input(
         'Number of consumer threads     [Leave blank for 1 consumer]: ')
 
@@ -170,34 +209,5 @@ if __name__ == "__main__":
         consumerThread.start()
     
     # Kill thread here
-    #time.sleep(10)
-    #endEvent.set()
-
-    for consThread in consumerThreadList:
-        consThread.join()    
-
-    for prodThread in producerThreadList:
-        prodThread.join()
-
-    for consThread in consumerThreadList:
-        consThread.join()
-
-    # When finished running all processes
-    seconds = (time.time() - startTime)
-    seconds %= 3600
-    minutes = seconds // 60
-    seconds %= 60
-
-    lines = [
-        'Program Stats',
-        '| ==================================== |',
-        "Compile Time: %d Minutes & %f Seconds" % (minutes, seconds),
-        "Number of Images: %d" % len(sharedImages),
-        "Output Folder: %s" % destinationPath
-    ]
-
-    with open('stats.txt', 'w') as f:
-        f.write('\n'.join(lines))
-
-    print("\nCompile Time: %d Minutes & %f Seconds" % (minutes, seconds))
-    print("Success! See details in stats.txt.\n")
+    S = threading.Timer(enhanceTime, endKaagad)
+    S.start()
