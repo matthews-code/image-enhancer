@@ -19,12 +19,8 @@ class producer (threading.Thread):
     def run(self):
         global sharedResourceBuffer
         global semaphoreBuffer
-        print("Producer %i has %i counts."%(self.id, self.counter))
+        
         i = self.id * self.counter
-
-        # 0 and 1
-        # range 0, 4 
-        # range 3, 6
         for i in range(self.id * self.counter, (self.id * self.counter) + self.counter):
             sharedResourceBuffer.append(self.images[i])
             semaphoreBuffer.release()
@@ -39,13 +35,13 @@ class consumer (threading.Thread):
         self.id = threadId
 
         self.counter = int(len(images)/numConsumerThreads)
-        if len(images) % 2 == 1 and threadId == 0 and not numConsumerThreads == 1:
-            self.counter = int(len(images)/numConsumerThreads + 1)
+        if threadId < len(images) % numConsumerThreads:
+            self.counter += 1
 
     def run(self):
         global sharedResourceBuffer
         global semaphoreBuffer
-        print("Consumer %i has %i counts."%(self.id, self.counter))
+
         for i in range(self.counter):
             semaphoreBuffer.acquire() 
             if sharedResourceBuffer:
@@ -62,6 +58,8 @@ class consumer (threading.Thread):
         finalImage = currSharpness.enhance(self.sharpness)
         return finalImage
 
+# ------- Global variables -------
+
 sharedImages = []
 sharedResourceBuffer = []
 semaphoreBuffer = threading.Semaphore(0)
@@ -70,40 +68,62 @@ producerThreadList = []
 consumerThreadList = []
 
 numProducerThreads = 1
-numConsumerThreads = 1
+numConsumerThreads = 0
 
 destinationPath = ''
 
+enhanceTime = 0
+
 if __name__ == "__main__":
-    # Start program
+    # ------- Start program -------
     print('Running Image Enhancer!')
     
-    # Take inputs
-    sourcePath    = input('Folder name of input images [eave blank for `images`]: ')
+    # ------- Take path inputs -------
+    sourcePath    = input('Folder name of input images [Leave blank for `images`]: ')
     destinationPath  = input('Folder name of output images [Leave blank for `enhanced`]: ')
 
-    if (sourcePath == ''):
-        sourcePath = './images'
-    else:
-        sourcePath = './' + sourcePath
+    if (sourcePath == ''): sourcePath = './images'
+    else: sourcePath = './' + sourcePath
 
-    if (destinationPath == ''):
-        destinationPath = './enhanced/'
-    else:
-        destinationPath = './' + destinationPath + '/'
+    if (destinationPath == ''): destinationPath = 'enhanced'
+    else: os.mkdir(destinationPath) 
+        
+    destinationPath = './' + destinationPath + '/'
 
-    # Load images
+    # ------- Take enhancing time input -------
+    enhanceTime = input('Enhance time in minutes [Leave blank for 0.1 minute]: ')
+
+    if enhanceTime: enhanceTime = float(enhanceTime) * 60
+    else: enhanceTime = 0.1 * 60
+
+    # ------- Take factor inputs -------
+    bF = input('Brightness Factor [Leave blank for a factor of 1]: ')
+    cF = input('Contrast Factor [Leave blank for a factor of 1]: ')
+    sF = input('Sharpess Factor [Leave blank for a factor of 1]: ')
+
+    if bF: bF = float(bF)
+    else: bF = 1
+
+    if cF: cF = float(cF)
+    else: cF = 1
+
+    if sF: sF = float(sF)
+    else: sF = 1
+
+    # ------- Take number of thread input -------
+    numConsumerThreads = input('Number of consumer threads [Leave blank for 1 consumer]: ')
+
+    if numConsumerThreads: numConsumerThreads = int(numConsumerThreads)
+    else: numConsumerThreads = 1
+
+    # # ------- Load Images -------
     files = os.listdir(sourcePath)
 
     for imageName in files:
         img = Image.open(sourcePath + '/' + imageName)
         sharedImages.append([img, imageName])
 
-    bF = float(input('Brightness Factor: '))
-    sF = float(input('Sharpess Factor: '))
-    cF = float(input('Contrast Factor: '))
-
-    # Create and run threads
+    # # ------- Create and run threads -------
     startTime = time.time()
 
     for i in range(numProducerThreads):
@@ -123,4 +143,4 @@ if __name__ == "__main__":
         consThread.join()
 
     # When finished running all processes
-    print("--- %s seconds with %i producers and %i consumers ---" % (time.time() - startTime, numProducerThreads, numConsumerThreads))
+    print("\n--- %s seconds with %i producer/s and %i consumer/s ---" % (time.time() - startTime, numProducerThreads, numConsumerThreads))
