@@ -6,28 +6,24 @@ import time
 from PIL import Image
 from PIL import ImageEnhance
 
-global endEvent
-endEvent = threading.Event()
-
 class producer (threading.Thread):
     def __init__(self, images, threadId):
         threading.Thread.__init__(self)
         self.images = images
         self.id = threadId
-
-        self.counter = int(len(images)/numProducerThreads)
-        if len(images) % 2 == 1 and threadId == 0 and not numProducerThreads == 1:
-            self.counter = int(len(images)/numProducerThreads + 1)
+        self.counter = int(len(images))
 
     def run(self):
         global sharedResourceBuffer
         global semaphoreBuffer
 
-        i = self.id * self.counter
-        for i in range(self.id * self.counter, (self.id * self.counter) + self.counter):
+        for i in range(self.counter):
+
+            if endEvent.is_set():
+                break
+
             sharedResourceBuffer.append(self.images[i])
             semaphoreBuffer.release()
-
 
 class consumer (threading.Thread):
     def __init__(self, images, brightness, contrast, sharpness, threadId):
@@ -48,6 +44,7 @@ class consumer (threading.Thread):
 
         for i in range(self.counter):
             semaphoreBuffer.acquire()
+            # print(semaphoreBuffer._value) # Current value of semaphore
 
             if endEvent.is_set():
                 break
@@ -66,9 +63,7 @@ class consumer (threading.Thread):
         finalImage = currSharpness.enhance(self.sharpness)
         return finalImage
 
-def ending():
-    for consThread in consumerThreadList:
-        consThread.join()    
+def ending():  
 
     for prodThread in producerThreadList:
         prodThread.join()
@@ -87,8 +82,8 @@ def ending():
     lines = [
         'Program Stats',
         '| ==================================== |',
+        "Successfully Enhanced [%d / %d] images with %d consumer/s." % (len(files), len(sharedImages), numConsumerThreads),
         "Compile Time: %d Minutes & %f Seconds" % (minutes, seconds),
-        "Successfully Enhanced [%d / %d] images" % (len(files), len(sharedImages)),
         "Output Folder: %s" % destinationPath
     ]
 
@@ -116,6 +111,8 @@ def asciiIntro():
                                                     
 
 # ------- Global variables -------
+
+endEvent = threading.Event()
 
 sharedImages = []
 sharedResourceBuffer = []
@@ -176,20 +173,14 @@ if __name__ == "__main__":
     cF = input('Contrast Factor                [Leave blank for a factor of 1]: ')
     sF = input('Sharpess Factor                [Leave blank for a factor of 1]: ')
 
-    if bF:
-        bF = float(bF)
-    else:
-        bF = 1
+    if bF: bF = float(bF)
+    else: bF = 1
 
-    if cF:
-        cF = float(cF)
-    else:
-        cF = 1
+    if cF: cF = float(cF)
+    else: cF = 1
 
-    if sF:
-        sF = float(sF)
-    else:
-        sF = 1
+    if sF: sF = float(sF)
+    else: sF = 1
 
     # ------- Take number of thread input -------
 
@@ -203,26 +194,26 @@ if __name__ == "__main__":
     else:
         numConsumerThreads = 1
 
-    # # ------- Load Images -------
+    # ------- Load Images -------
     files = os.listdir(sourcePath)
 
     for imageName in files:
         img = Image.open(sourcePath + '/' + imageName)
         sharedImages.append([img, imageName])
 
-    # # ------- Create and run threads -------
+    # ------- Create and run threads -------
     startTime = time.time()
-
-    for i in range(numProducerThreads):
-        producerThread = producer(sharedImages, i)
-        producerThreadList.append(producerThread)
-        producerThread.start()
 
     for i in range(numConsumerThreads):
         consumerThread = consumer(sharedImages, bF, cF, sF, i)
         consumerThreadList.append(consumerThread)
         consumerThread.start()
+
+    for i in range(numProducerThreads):
+        producerThread = producer(sharedImages, i)
+        producerThreadList.append(producerThread)
+        producerThread.start()
     
     # Kill thread here
-    S = threading.Timer(enhanceTime, endKaagad)
-    S.start()
+    timer = threading.Timer(enhanceTime, endKaagad)
+    timer.start()
