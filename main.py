@@ -164,12 +164,12 @@ if __name__ == "__main__":
 
     # ------- Take enhancing time input -------
     enhanceTime = input(
-        '\nEnhance time in minutes        [Leave blank for 0.1 minute (6 Seconds)]: ')
+        '\nEnhance time in minutes        [Leave blank for 1 second]: ')
 
     if enhanceTime:
         enhanceTime = float(enhanceTime) * 60
     else:
-        enhanceTime = 0.1 * 60
+        enhanceTime = 0.01666667 * 60
 
     # ------- Take factor inputs -------
     bF = input('Brightness Factor              [Leave blank for a factor of 1]: ')
