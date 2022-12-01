@@ -103,6 +103,18 @@ def endKaagad():
     ending()
     quit()
 
+def asciiIntro():
+    print('\033[92m' + '    ______  ______   ____________                    ')
+    print('   /  _/  |/  /   | / ____/ ____/                    ')
+    print('   / // /|_/ / /| |/ / __/ __/                       ')
+    print(' _/ // /  / / ___ / /_/ / /___                       ')
+    print('/___/_/__/_/_/__|_\____/_____/   __________________  ')
+    print('   / ____/ | / / / / /   |  / | / / ____/ ____/ __ \ ')
+    print('  / __/ /  |/ / /_/ / /| | /  |/ / /   / __/ / /_/ / ')
+    print(' / /___/ /|  / __  / ___ |/ /|  / /___/ /___/ _, _/  ')
+    print('/_____/_/ |_/_/ /_/_/  |_/_/ |_/\____/_____/_/ |_|   ' + '\033[0m')
+                                                    
+
 # ------- Global variables -------
 
 sharedImages = []
@@ -121,7 +133,7 @@ enhanceTime = 0
 
 if __name__ == "__main__":
     # ------- Start program -------
-
+    asciiIntro()
     print('\nRunning Image Enhancer!\n')
     print('||===========================||\n')
     
@@ -129,9 +141,11 @@ if __name__ == "__main__":
 
     sourcePath = input(
         'Folder name of input images    [Leave blank for `images`]: ')
+
+    print('\n!!! WARNING WILL DELETE/CLEAR CONTENTS OF OUTPUT FOLDER !!!')
     destinationPath = input(
         'Folder name of output images   [Leave blank for `enhanced`]: ')
-
+    
     if (sourcePath == ''):
         sourcePath = './images'
     else:
@@ -144,12 +158,13 @@ if __name__ == "__main__":
 
     destinationPath = './' + destinationPath + '/'
 
-    # --- Clear enhanced folder ----
-    shutil.rmtree(destinationPath)
+    # ------- Delete enhanced folder -------
+    for f in os.listdir(destinationPath):
+        os.remove(os.path.join(destinationPath, f))
 
     # ------- Take enhancing time input -------
     enhanceTime = input(
-        'Enhance time in minutes        [Leave blank for 0.1 minute (6 Seconds)]: ')
+        '\nEnhance time in minutes        [Leave blank for 0.1 minute (6 Seconds)]: ')
 
     if enhanceTime:
         enhanceTime = float(enhanceTime) * 60
