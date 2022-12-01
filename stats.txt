@@ -1,5 +1,5 @@
 Program Stats
 | ==================================== |
-Compile Time: 0 Minutes & 0.628702 Seconds
-Successfully Enhanced [16 / 100] images
+Compile Time: 0 Minutes & 6.003878 Seconds
+Successfully Enhanced [105 / 105] images
 Output Folder: ./enhanced/

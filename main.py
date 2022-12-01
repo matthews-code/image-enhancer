@@ -96,7 +96,7 @@ def ending():
         f.write('\n'.join(lines))
 
     print("\nCompile Time: %d Minutes & %f Seconds" % (minutes, seconds))
-    print("Success! See details in stats.txt.\n")
+    print('\033[92m' + "Success! See details in stats.txt.\n" '\033[0m')
 
 def endKaagad():
     endEvent.set()
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     sourcePath = input(
         'Folder name of input images    [Leave blank for `images`]: ')
 
-    print('\n!!! WARNING WILL DELETE/CLEAR CONTENTS OF OUTPUT FOLDER !!!')
+    print('\033[91m' + '\n!!! WARNING WILL DELETE/CLEAR CONTENTS OF OUTPUT FOLDER !!!' + '\033[0m')
     destinationPath = input(
         'Folder name of output images   [Leave blank for `enhanced`]: ')
     
