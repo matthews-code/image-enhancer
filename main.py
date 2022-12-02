@@ -14,6 +14,7 @@ class producer (threading.Thread):
         self.counter = int(len(images))
 
     def run(self):
+        #print("\nProducer %i has %i counts."%(self.id, self.counter))
         global sharedResourceBuffer
         global semaphoreBuffer
 
@@ -42,8 +43,11 @@ class consumer (threading.Thread):
         global sharedResourceBuffer
         global semaphoreBuffer
 
+        # print("Consumer %i has %i counts."%(self.id, self.counter))
+
         for i in range(self.counter):
             semaphoreBuffer.acquire()
+
             # print(semaphoreBuffer._value) # Current value of semaphore
 
             if endEvent.is_set():
