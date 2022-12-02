@@ -1,5 +1,5 @@
 Program Stats
 | ==================================== |
-Successfully Enhanced [100 / 100] images with 3 consumer/s.
-Compile Time: 0 Minutes & 6.014142 Seconds
+Successfully Enhanced [100 / 100] images with 4 consumer/s.
+Compile Time: 0 Minutes & 1.015448 Seconds
 Output Folder: ./enhanced/

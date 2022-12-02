@@ -203,6 +203,10 @@ if __name__ == "__main__":
 
     for imageName in files:
         img = Image.open(sourcePath + '/' + imageName)
+        if(img.format == 'GIF'):
+            for i in range(img.n_frames):
+                img.seek(i)
+                # img.save(sourcePath + '/' + str(i) + imageName)
         sharedImages.append([img, imageName])
 
     # ------- Create and run threads -------
